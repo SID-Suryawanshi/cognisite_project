@@ -3,6 +3,7 @@ import google.generativeai as genai
 from fastapi import FastAPI
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -13,6 +14,15 @@ load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 app = FastAPI()
+
+# --- Add CORS Middleware ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # --- Pydantic Models for Data Validation ---
 # This defines what data we expect from the user's form
@@ -53,7 +63,10 @@ async def generate_website(request: WebsiteRequest):
     """
 
     try:
-        model = genai.GenerativeModel('gemini-pro')
+        # --- THIS IS THE LINE I FIXED ---
+        model = genai.GenerativeModel('gemini-1.5-flash') 
+        # --------------------------------
+
         response = model.generate_content(prompt)
         
         # We might need to clean up the response to remove backticks or "html" label
@@ -63,4 +76,5 @@ async def generate_website(request: WebsiteRequest):
 
     except Exception as e:
         print("An error occurred:", e)
-        return {"error": "Failed to generate website from AI model."}
+        # Return the actual error to the frontend for better debugging
+        return {"error": str(e)}

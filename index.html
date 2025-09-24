@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CogniSite AI Builder</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            margin: 0;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #2c3e50;
+        }
+        p {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        label {
+            font-weight: 600;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            background-color: #3498db;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        #result-container {
+            margin-top: 2rem;
+        }
+        #result-code {
+            background-color: #ecf0f1;
+            padding: 1rem;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: monospace;
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>CogniSite 🧠✨</h1>
+        <p>Generate a neuro-optimized website with AI.</p>
+
+        <form id="website-form">
+            <label for="business_name">Business Name</label>
+            <input type="text" id="business_name" name="business_name" placeholder="e.g., Pune Chai House" required>
+
+            <label for="product_name">Product/Service</label>
+            <input type="text" id="product_name" name="product_name" placeholder="e.g., Authentic Masala Chai" required>
+
+            <label for="goal">Main Goal</label>
+            <select id="goal" name="goal" required>
+                <option value="Sell a Product">Sell a Product</option>
+                <option value="Capture Email Signups">Capture Email Signups</option>
+                <option value="Showcase a Portfolio">Showcase a Portfolio</option>
+            </select>
+
+            <label for="feeling">Desired Visitor Feeling</label>
+            <select id="feeling" name="feeling" required>
+                <option value="Trust & Security">Trust & Security</option>
+                <option value="Excitement & Urgency">Excitement & Urgency</option>
+                <option value="Calm & Luxury">Calm & Luxury</option>
+            </select>
+
+            <button type="submit" id="submit-button">Generate Website</button>
+        </form>
+
+        <div id="result-container">
+            <h2>Generated HTML Code:</h2>
+            <pre id="result-code">Your website code will appear here...</pre>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('website-form');
+        const resultElement = document.getElementById('result-code');
+        const submitButton = document.getElementById('submit-button');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            submitButton.textContent = 'Generating...';
+            submitButton.disabled = true;
+            resultElement.textContent = 'Please wait...';
+
+            const formData = new FormData(form);
+            const requestData = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/generate-website/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                resultElement.textContent = data.html_content;
+
+            } catch (error) {
+                resultElement.textContent = `Error: ${error.message}. Is the Python server running and did you fix the CORS issue in main.py?`;
+            } finally {
+                submitButton.textContent = 'Generate Website';
+                submitButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
