@@ -5,21 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CogniSite AI Builder</title>
     <style>
+        /* Basic Styles */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f4f7f9;
             color: #333;
             margin: 0;
-            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
-        .container {
-            max-width: 800px;
-            margin: auto;
+
+        /* NEW: Main container for two-column layout */
+        .main-content {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden; /* Prevent scrolling on the main body */
+        }
+
+        /* NEW: Left column for controls */
+        .controls-container {
+            flex: 0 0 450px; /* Fixed width for the control panel */
+            padding: 2rem;
             background-color: #fff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            overflow-y: auto; /* Allow scrolling if content is too long */
         }
+        
+        /* NEW: Right column for the live preview */
+        .preview-container {
+            flex-grow: 1;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
         h1 {
             text-align: center;
             font-size: 2.5rem;
@@ -57,74 +77,73 @@
             cursor: pointer;
             transition: background-color 0.2s;
         }
-        button:hover {
-            background-color: #2980b9;
-        }
         button:disabled {
             background-color: #bdc3c7;
             cursor: not-allowed;
         }
-        #result-container {
-            margin-top: 2rem;
-        }
-        #result-code {
-            background-color: #ecf0f1;
-            padding: 1rem;
-            border-radius: 4px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-family: monospace;
-            min-height: 100px;
+
+        /* NEW: Styles for the preview iframe */
+        #preview-frame {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #fff;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>CogniSite 🧠✨</h1>
-        <p>Generate a neuro-optimized website with AI.</p>
-
-        <form id="website-form">
-            <label for="business_name">Business Name</label>
-            <input type="text" id="business_name" name="business_name" placeholder="e.g., Pune Chai House" required>
-
-            <label for="product_name">Product/Service</label>
-            <input type="text" id="product_name" name="product_name" placeholder="e.g., Authentic Masala Chai" required>
-
-            <label for="goal">Main Goal</label>
-            <select id="goal" name="goal" required>
-                <option value="Sell a Product">Sell a Product</option>
-                <option value="Capture Email Signups">Capture Email Signups</option>
-                <option value="Showcase a Portfolio">Showcase a Portfolio</option>
-            </select>
-
-            <label for="feeling">Desired Visitor Feeling</label>
-            <select id="feeling" name="feeling" required>
-                <option value="Trust & Security">Trust & Security</option>
-                <option value="Excitement & Urgency">Excitement & Urgency</option>
-                <option value="Calm & Luxury">Calm & Luxury</option>
-            </select>
-
-            <button type="submit" id="submit-button">Generate Website</button>
-        </form>
-
-        <div id="result-container">
-            <h2>Generated HTML Code:</h2>
-            <pre id="result-code">Your website code will appear here...</pre>
+    <div class="main-content">
+        <div class="controls-container">
+            <h1>CogniSite 🧠✨</h1>
+            <p>Generate a neuro-optimized website with AI.</p>
+    
+            <form id="website-form">
+                <label for="business_name">Business Name</label>
+                <input type="text" id="business_name" name="business_name" placeholder="e.g., Pune Chai House" required>
+    
+                <label for="product_name">Product/Service</label>
+                <input type="text" id="product_name" name="product_name" placeholder="e.g., Authentic Masala Chai" required>
+    
+                <label for="goal">Main Goal</label>
+                <select id="goal" name="goal" required>
+                    <option value="Sell a Product">Sell a Product</option>
+                    <option value="Capture Email Signups">Capture Email Signups</option>
+                    <option value="Showcase a Portfolio">Showcase a Portfolio</option>
+                </select>
+    
+                <label for="feeling">Desired Visitor Feeling</label>
+                <select id="feeling" name="feeling" required>
+                    <option value="Trust & Security">Trust & Security</option>
+                    <option value="Excitement & Urgency">Excitement & Urgency</option>
+                    <option value="Calm & Luxury">Calm & Luxury</option>
+                </select>
+    
+                <button type="submit" id="submit-button">Generate Website</button>
+            </form>
+        </div>
+    
+        <!-- NEW: Live Preview container -->
+        <div class="preview-container">
+            <h2>Live Preview</h2>
+            <iframe id="preview-frame" srcdoc="<p style='text-align:center; padding-top: 2rem; color: #7f8c8d;'>Your generated website will appear here...</p>"></iframe>
         </div>
     </div>
 
     <script>
         const form = document.getElementById('website-form');
-        const resultElement = document.getElementById('result-code');
         const submitButton = document.getElementById('submit-button');
+        // NEW: Get a reference to the iframe for the live preview
+        const previewFrame = document.getElementById('preview-frame');
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
 
             submitButton.textContent = 'Generating...';
             submitButton.disabled = true;
-            resultElement.textContent = 'Please wait...';
+            // NEW: Update the iframe with a loading message
+            previewFrame.srcdoc = "<p style='text-align:center; padding-top: 2rem; color: #7f8c8d;'>Generating your website, please wait...</p>";
 
             const formData = new FormData(form);
             const requestData = Object.fromEntries(formData.entries());
@@ -132,21 +151,23 @@
             try {
                 const response = await fetch('http://127.0.0.1:8000/generate-website/', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestData),
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
                 }
 
                 const data = await response.json();
-                resultElement.textContent = data.html_content;
+
+                // NEW: Update the iframe's content to render the live preview!
+                previewFrame.srcdoc = data.html_content;
 
             } catch (error) {
-                resultElement.textContent = `Error: ${error.message}. Is the Python server running and did you fix the CORS issue in main.py?`;
+                // NEW: Show the error inside the preview frame
+                previewFrame.srcdoc = `<p style='text-align:center; padding: 2rem; color: red;'><strong>Error:</strong> ${error.message}. Is the Python server running?</p>`;
             } finally {
                 submitButton.textContent = 'Generate Website';
                 submitButton.disabled = false;
