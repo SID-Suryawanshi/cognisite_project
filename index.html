@@ -4,118 +4,170 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CogniSite AI Builder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Base styles for all screen sizes */
+        :root {
+            --brand-color: #4A90E2;
+            --brand-hover: #357ABD;
+            --background-primary: #FFFFFF;
+            --background-secondary: #F7F9FC;
+            --text-primary: #2c3e50;
+            --text-secondary: #8492a6;
+            --border-color: #E5E7EB;
+            --shadow-color: rgba(0,0,0,0.05);
+            --success-color: #2ECC71;
+            --warning-color: #F39C12;
+            --danger-color: #E74C3C;
+        }
+        body.dark-mode {
+            --brand-color: #58A6FF;
+            --brand-hover: #79B8FF;
+            --background-primary: #1C2128;
+            --background-secondary: #0D1117;
+            --text-primary: #C9D1D9;
+            --text-secondary: #8B949E;
+            --border-color: #30363D;
+            --shadow-color: rgba(0,0,0,0.2);
+        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f7f9;
-            color: #333;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-secondary);
+            color: var(--text-primary);
             margin: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }
-
-        /* --- LAYOUT CONTAINER --- */
-        .main-content {
-            display: flex;
-            flex-grow: 1;
-            overflow: hidden; /* Prevent scrolling on the body */
-        }
-
+        .main-content { display: flex; flex-grow: 1; overflow: hidden; }
         .controls-container {
-            flex: 0 0 450px; /* Fixed width for the control panel on desktops */
-            padding: 2rem;
-            background-color: #fff;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
-            overflow-y: auto; /* Allow controls to scroll if they get too long */
+            flex: 0 0 450px;
+            padding: 2.5rem;
+            background-color: var(--background-primary);
+            box-shadow: 2px 0 15px var(--shadow-color);
+            overflow-y: auto;
+            border-right: 1px solid var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s;
         }
-
-        .preview-container {
-            flex-grow: 1; /* Preview takes the rest of the space */
+        .preview-container { flex-grow: 1; padding: 2.5rem; display: flex; flex-direction: column; }
+        .controls-header { display: flex; justify-content: space-between; align-items: center; }
+        h1 { font-size: 2rem; font-weight: 700; margin: 0; }
+        .subtitle { text-align: center; color: var(--text-secondary); margin-top: 0.5rem; margin-bottom: 2.5rem; }
+        form { display: flex; flex-direction: column; gap: 1.25rem; }
+        label { font-weight: 600; font-size: 0.9rem; }
+        input, select {
+            width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 1rem; box-sizing: border-box; background-color: var(--background-primary); color: var(--text-primary); transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none; border-color: var(--brand-color); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-color) 20%, transparent);
+        }
+        small { color: var(--text-secondary); margin-top: -0.75rem; }
+        .main-button { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.85rem 1.5rem; border: none; border-radius: 6px; background-color: var(--brand-color); color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .main-button:hover { background-color: var(--brand-hover); }
+        .main-button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+        #preview-frame { width: 100%; height: 100%; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--background-white); }
+        .preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        h2 { margin: 0; }
+        .preview-actions { display: flex; gap: 0.5rem; }
+        .secondary-button { font-size: 0.8rem; padding: 0.4rem 0.8rem; background-color: color-mix(in srgb, var(--brand-color) 15%, transparent); color: var(--brand-color); font-weight: 600; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; }
+        .secondary-button:hover { background-color: color-mix(in srgb, var(--brand-color) 30%, transparent); }
+        .loader { width: 18px; height: 18px; border: 2px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #theme-toggle { background: none; border: 1px solid var(--border-color); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .dark-mode .sun-icon { display: block; } .dark-mode .moon-icon { display: none; } .sun-icon { display: none; }
+        
+        /* --- NEW: Styles for the Neuro Score --- */
+        #neuro-score-container {
+            margin-top: 1.5rem;
             padding: 1rem;
-            display: flex;
-            flex-direction: column;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            display: none; /* Hidden by default */
         }
+        #neuro-score-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .score-good { color: var(--success-color); }
+        .score-medium { color: var(--warning-color); }
+        .score-high { color: var(--danger-color); }
+        #neuro-score-label { font-weight: 600; color: var(--text-secondary); }
+        #neuro-score-feedback { font-size: 0.9rem; margin-top: 0.5rem; }
 
-        h1 { text-align: center; font-size: 2.5rem; color: #2c3e50; }
-        p { text-align: center; color: #7f8c8d; margin-bottom: 2rem; }
-        form { display: flex; flex-direction: column; gap: 1rem; }
-        label { font-weight: 600; }
-        input, select { width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; box-sizing: border-box; }
-        button { padding: 0.75rem 1.5rem; border: none; border-radius: 4px; background-color: #3498db; color: white; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
-        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
-        #preview-frame { width: 100%; height: 100%; border: 1px solid #ccc; border-radius: 8px; background-color: #fff; }
-
-        /* --- THE RESPONSIVE MAGIC --- */
-        /* This rule applies ONLY if the browser window is 900px wide or less */
         @media (max-width: 900px) {
-            .main-content {
-                flex-direction: column; /* Stack the columns vertically */
-                overflow: auto; /* Allow the whole page to scroll on mobile */
-            }
-
-            .controls-container {
-                flex: 0 0 auto; /* Let the control panel have a natural height */
-                box-shadow: 0 2px 10px rgba(0,0,0,0.05); /* Shadow on the bottom now */
-            }
-
-            .preview-container {
-                min-height: 500px; /* Give the preview a minimum height so it's usable */
-            }
+            .main-content { flex-direction: column; overflow: auto; }
+            .controls-container { flex: 0 0 auto; border-right: none; }
+            .preview-container { min-height: 500px; }
         }
     </style>
 </head>
 <body>
-
     <div class="main-content">
         <div class="controls-container">
-            <h1>CogniSite 🧠✨</h1>
-            <p>Generate a neuro-optimized website with AI.</p>
+            <div class="controls-header">
+                <h1>CogniSite 🧠✨</h1>
+                <button id="theme-toggle" title="Toggle dark mode">
+                    <span class="moon-icon">🌙</span>
+                    <span class="sun-icon">☀️</span>
+                </button>
+            </div>
+            <p class="subtitle">Generate a neuro-optimized website with AI.</p>
     
             <form id="website-form">
-                <label for="business_name">Business Name</label>
-                <input type="text" id="business_name" name="business_name" placeholder="e.g., Pune Chai House" required>
-    
-                <label for="product_name">Product/Service</label>
-                <input type="text" id="product_name" name="product_name" placeholder="e.g., Authentic Masala Chai" required>
-    
-                <label for="goal">Main Goal</label>
-                <select id="goal" name="goal" required>
-                    <option value="Sell a Product">Sell a Product</option>
-                    <option value="Capture Email Signups">Capture Email Signups</option>
-                    <option value="Showcase a Portfolio">Showcase a Portfolio</option>
-                </select>
-    
-                <label for="feeling">Desired Visitor Feeling</label>
-                <select id="feeling" name="feeling" required>
-                    <option value="Trust & Security">Trust & Security</option>
-                    <option value="Excitement & Urgency">Excitement & Urgency</option>
-                    <option value="Calm & Luxury">Calm & Luxury</option>
-                </select>
-    
-                <button type="submit" id="submit-button">Generate Website</button>
+                <!-- Form fields remain the same -->
+                <div><label for="business_name">Business Name</label><input type="text" id="business_name" name="business_name" required></div>
+                <div><label for="product_name">Product/Service</label><input type="text" id="product_name" name="product_name" required></div>
+                <div><label for="goal">Main Goal</label><select id="goal" name="goal" required><option>Sell a Product</option><option>Capture Email Signups</option><option>Showcase a Portfolio</option></select></div>
+                <div><label for="feeling">Desired Visitor Feeling</label><select id="feeling" name="feeling" required><option>Trust & Security</option><option>Excitement & Urgency</option><option>Calm & Luxury</option></select></div>
+                <button type="submit" id="submit-button" class="main-button"><span>Generate Website</span></button>
             </form>
+            
+            <!-- --- NEW: Container for the Neuro Score --- -->
+            <div id="neuro-score-container">
+                <div id="neuro-score-value">--</div>
+                <div id="neuro-score-label">Cognitive Load Score</div>
+                <p id="neuro-score-feedback">Lower is better!</p>
+            </div>
         </div>
     
         <div class="preview-container">
-            <h2>Live Preview</h2>
-            <iframe id="preview-frame" srcdoc="<p style='text-align:center; padding-top: 2rem; color: #7f8c8d;'>Your generated website will appear here...</p>"></iframe>
+            <div class="preview-header">
+                <h2>Live Preview</h2>
+                <div class="preview-actions">
+                    <button id="copy-button" class="secondary-button" hidden>Copy Code</button>
+                    <button id="save-button" class="secondary-button" hidden>Save as .html</button>
+                </div>
+            </div>
+            <iframe id="preview-frame" srcdoc="<p style='text-align:center; padding-top: 2rem; color: var(--text-secondary);'>Your generated website will appear here...</p>"></iframe>
         </div>
     </div>
 
     <script>
-        // The JavaScript does not need to change at all for responsiveness
+        // --- This script has been fully updated and fixed ---
         const form = document.getElementById('website-form');
         const submitButton = document.getElementById('submit-button');
         const previewFrame = document.getElementById('preview-frame');
+        const copyButton = document.getElementById('copy-button');
+        const saveButton = document.getElementById('save-button');
+        const themeToggleButton = document.getElementById('theme-toggle');
+        // --- NEW: Get references for Neuro Score elements ---
+        const neuroScoreContainer = document.getElementById('neuro-score-container');
+        const neuroScoreValue = document.getElementById('neuro-score-value');
+        const neuroScoreFeedback = document.getElementById('neuro-score-feedback');
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
-
-            submitButton.textContent = 'Generating...';
+            submitButton.innerHTML = '<span class="loader"></span><span>Generating...</span>';
             submitButton.disabled = true;
-            previewFrame.srcdoc = "<p style='text-align:center; padding-top: 2rem; color: #7f8c8d;'>Generating your website, please wait...</p>";
+            copyButton.hidden = true;
+            saveButton.hidden = true;
+            neuroScoreContainer.style.display = 'none'; // Hide score on new generation
+            previewFrame.srcdoc = `<p style='text-align:center; padding-top: 2rem; color: var(--text-secondary);'>Generating your website, please wait...</p>`;
 
             const formData = new FormData(form);
             const requestData = Object.fromEntries(formData.entries());
@@ -129,14 +181,67 @@
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 
                 const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+                
                 previewFrame.srcdoc = data.html_content;
+                copyButton.hidden = false;
+                saveButton.hidden = false;
+                
+                // --- NEW: Display and color-code the Neuro Score ---
+                if (data.neuro_score !== -1) {
+                    neuroScoreValue.textContent = data.neuro_score;
+                    neuroScoreValue.className = ''; // Reset classes
+                    if (data.neuro_score < 75) {
+                        neuroScoreValue.classList.add('score-good');
+                        neuroScoreFeedback.textContent = 'Excellent! Very low cognitive load.';
+                    } else if (data.neuro_score < 150) {
+                        neuroScoreValue.classList.add('score-medium');
+                        neuroScoreFeedback.textContent = 'Good. The design is reasonably focused.';
+                    } else {
+                        neuroScoreValue.classList.add('score-high');
+                        neuroScoreFeedback.textContent = 'High! Consider simplifying the content.';
+                    }
+                    neuroScoreContainer.style.display = 'block';
+                }
 
             } catch (error) {
-                previewFrame.srcdoc = `<p style='text-align:center; padding: 2rem; color: red;'><strong>Error:</strong> ${error.message}. Is the Python server running?</p>`;
+                previewFrame.srcdoc = `<p style='text-align:center; padding: 2rem; color: red;'><strong>Error:</strong> ${error.message}.</p>`;
             } finally {
-                submitButton.textContent = 'Generate Website';
+                submitButton.innerHTML = '<span>Generate Website</span>';
                 submitButton.disabled = false;
             }
+        });
+
+        copyButton.addEventListener('click', () => {
+            const codeToCopy = previewFrame.srcdoc;
+            const textArea = document.createElement('textarea');
+            textArea.value = codeToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            copyButton.textContent = 'Copied!';
+            setTimeout(() => { copyButton.textContent = 'Copy Code'; }, 2000);
+        });
+
+        saveButton.addEventListener('click', () => {
+            const htmlContent = previewFrame.srcdoc;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${form.business_name.value.replace(/\s+/g, '-')}-website.html`; // Dynamic filename
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        themeToggleButton.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
         });
     </script>
 </body>
